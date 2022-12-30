@@ -9,6 +9,7 @@ height = 12.0
 
 [node name="Ant" type="CharacterBody2D" groups=["ants"]]
 script = ExtResource("1_wvat4")
+max_distance = 50
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_o0ysn")

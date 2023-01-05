@@ -1,52 +1,79 @@
 extends CharacterBody2D
 
-# The target node that the character should lock onto and move towards
-var target_node: CharacterBody2D
-
-# The movement speed of the character
 @export var move_speed = 10
+@export var agro_distance = 50
 
-# The maximum distance that the character can be from the target before it stops moving
-@export var max_distance = 50
+var target_node: CharacterBody2D
+var wander_position
+var size
+var screen_size
+
+func _ready():
+	size = $Sprite2D.texture.get_size()
+	screen_size = get_viewport_rect().size
 
 func _physics_process(delta: float) -> void:
-	# Check if the target node is set and exists
-	if is_instance_valid(target_node) and target_node and target_node.is_inside_tree():
-		# Calculate the distance between the character and the target node
-		var distance = position.distance_to(target_node.position)
-
-		# If the distance is greater than the maximum distance, move towards the target node
-		if distance < max_distance:
-			# Calculate the direction vector towards the target node
-			var direction = (target_node.position - position).normalized()
-			# Calculate the velocity vector based on the direction and the move speed
-			velocity = direction * move_speed
-
-			# Rotate the character towards the target node
-			rotation = direction.angle()
-			
-			# Move the character towards the target node
-			var collision = move_and_collide(velocity * delta)
-			if collision and not collision.get_collider().is_queued_for_deletion():
-				queue_free();
-		else:
-			target_node = null
+	if has_valid_target():
+		follow_target()
 	else:
-		# If the target node is not set or does not exist, stop moving
-		move_and_slide()
+		wander()
+	move(delta)
+		
+func follow_target():
+	var direction = (target_node.position - position).normalized()
+	velocity = direction * move_speed
+	rotation = direction.angle()
+	
+func wander():
+	if wander_position == null:
+		detect_wander_position()
+	var direction = (wander_position - position).normalized()
+	velocity = direction * move_speed
+	rotation = direction.angle()
+	if (position.x < 0 or position.x + size.x > screen_size.x):
+		wander_position = null
+	elif (position.y < 0 or position.y + size.y > screen_size.y):
+		wander_position = null
+	elif get_distance_to_wander_position() < 0.2:
+		wander_position = null
+		
+func move(delta: float):
+	var collision = move_and_collide(velocity * delta)
+	if collision and not collision.get_collider().is_queued_for_deletion():
+		handle_collision()
+	position.x = clamp(position.x, 0, screen_size.x - size.x)
+	position.y = clamp(position.y, 0, screen_size.y - size.y)
+		
+func get_distance_to_target():
+	var distance = position.distance_to(target_node.position)
+	return distance
+	
+func get_distance_to_wander_position():
+	var distance = position.distance_to(wander_position)
+	return distance
+		
+func has_valid_target():
+	if is_instance_valid(target_node) and target_node and target_node.is_inside_tree():
+		return true
+	else:
 		detect_target()
+		return false
 		
 func detect_target():
-	# Get the list of colliders in the area
 	var ants = get_tree().get_nodes_in_group("ants")
-	# Find the nearest node of the target type
 	for ant in ants:
 		if ant == self:
 			continue
-		# Calculate the distance to the node
 		var distance = position.distance_to(ant.position)
-		if distance < max_distance:
-			# Update the detected node and distance
+		if distance < agro_distance:
 			target_node = ant
+			wander_position = null
 			break
-
+			
+func detect_wander_position():
+	var x = randi_range(0, screen_size.x - size.x)
+	var y = randi_range(0, screen_size.y - size.y)
+	wander_position = Vector2(x, y)
+			
+func handle_collision():
+	queue_free()

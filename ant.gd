@@ -7,9 +7,13 @@ var target_node: CharacterBody2D
 var wander_position
 var size
 var screen_size
+var width
+var height
 
 func _ready():
-	size = $Sprite2D.texture.get_size()
+	size = $Sprite2D.get_rect().size
+	width = size.x / 2
+	height = size.y / 2
 	screen_size = get_viewport_rect().size
 
 func _physics_process(delta: float) -> void:
@@ -30,20 +34,20 @@ func wander():
 	var direction = (wander_position - position).normalized()
 	velocity = direction * move_speed
 	rotation = direction.angle()
-	if (position.x < 0 or position.x + size.x > screen_size.x):
+	if (position.x - width < 0 or position.x + width > screen_size.x):
 		wander_position = null
-	elif (position.y < 0 or position.y + size.y > screen_size.y):
+	elif (position.y < 0 - height or position.y + height > screen_size.y):
 		wander_position = null
 	elif get_distance_to_wander_position() < 0.2:
 		wander_position = null
 		
 func move(delta: float):
+	position.x = clamp(position.x, 0 + width, screen_size.x - width)
+	position.y = clamp(position.y, 0 + height, screen_size.y - height)
 	var collision = move_and_collide(velocity * delta)
 	if collision and not collision.get_collider().is_queued_for_deletion():
 		handle_collision()
-	position.x = clamp(position.x, 0, screen_size.x - size.x)
-	position.y = clamp(position.y, 0, screen_size.y - size.y)
-		
+	
 func get_distance_to_target():
 	var distance = position.distance_to(target_node.position)
 	return distance
@@ -71,8 +75,8 @@ func detect_target():
 			break
 			
 func detect_wander_position():
-	var x = randi_range(0, screen_size.x - size.x)
-	var y = randi_range(0, screen_size.y - size.y)
+	var x = randi_range(width, screen_size.x - width)
+	var y = randi_range(height, screen_size.y - height)
 	wander_position = Vector2(x, y)
 			
 func handle_collision():

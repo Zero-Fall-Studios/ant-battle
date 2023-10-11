@@ -1,20 +1,19 @@
-extends Node
 class_name State
+extends Node
 
-var state_machine = null
-
-func unhandled_input(event: InputEvent) -> void:
-	pass
-
-func physics_process(delta: float) -> void:
-	pass
-
-func process(delta: float) -> void:
-	pass
+var parent : Ant
 
 func enter() -> void:
 	pass
 
 func exit() -> void:
 	pass
+
+func process_input(event: InputEvent) -> State:
+	return null
+
+func process_frame(delta: float) -> State:
+	return null
 	
+func process_physics(delta: float) -> State:
+	return null

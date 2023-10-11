@@ -1,34 +1,33 @@
-extends Node
 class_name StateMachine
+extends Node
 
-signal transitioned(state_name)
+@export var initial_state : State
 
-@export var initial_state : String
+var current_state : State
 
-var current_state
-var states : Dictionary = {}
-
-func _ready():
-	await owner.ready
+func init(parent: Ant) -> void:
 	for child in get_children():
-		if child is State:
-			child.state_machine = self
-			states[child.name] = child
+		child.parent = parent
 	if initial_state:
-		transition_to(initial_state)
+		change_state(initial_state)
 		
-func _unhandled_input(event: InputEvent) -> void:
-	current_state.unhandled_input(event)
-
-func _process(delta: float) -> void:
-	current_state.process(delta)
-
-func _physics_process(delta: float) -> void:
-	current_state.physics_process(delta)
-		
-func transition_to(new_state: String):
+func change_state(new_state: State) -> void:
 	if current_state:
 		current_state.exit()
-	current_state = states[new_state]
+	current_state = new_state
 	current_state.enter()
-	emit_signal("transitioned", current_state.name)
+		
+func process_input(event: InputEvent) -> void:
+	var new_state = current_state.process_input(event)
+	if new_state:
+		change_state(new_state)
+
+func process_frame(delta: float) -> void:
+	var new_state = current_state.process_frame(delta)
+	if new_state:
+		change_state(new_state)
+
+func process_physics(delta: float) -> void:
+	var new_state = current_state.process_physics(delta)
+	if new_state:
+		change_state(new_state)

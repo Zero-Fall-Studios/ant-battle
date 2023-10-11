@@ -1,10 +1,10 @@
 [gd_scene load_steps=11 format=3 uid="uid://byfl1246yvrf6"]
 
-[ext_resource type="Script" path="res://actors/ant.gd" id="1_kbbmr"]
-[ext_resource type="Texture2D" uid="uid://cowakishuhuoj" path="res://assets/sprites/ant-Sheet.png" id="2_633n4"]
-[ext_resource type="Script" path="res://state_machine/state_machine.gd" id="3_fodtn"]
-[ext_resource type="Script" path="res://state_machine/wander.gd" id="4_dn56m"]
-[ext_resource type="Script" path="res://state_machine/follow_target.gd" id="5_74h2v"]
+[ext_resource type="Script" path="res://characters/ant.gd" id="1_s4a6q"]
+[ext_resource type="Texture2D" uid="uid://cowakishuhuoj" path="res://assets/sprites/ant-Sheet.png" id="2_gai6w"]
+[ext_resource type="Script" path="res://state_machine/state_machine.gd" id="3_ccaip"]
+[ext_resource type="Script" path="res://state_machine/states/wander_state.gd" id="4_7fs7l"]
+[ext_resource type="Script" path="res://state_machine/states/follow_target_state.gd" id="5_r570d"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_amwtn"]
 size = Vector2(4, 2.00002)
@@ -51,11 +51,11 @@ _data = {
 }
 
 [node name="Ant" type="CharacterBody2D" groups=["ants"]]
-script = ExtResource("1_kbbmr")
+script = ExtResource("1_s4a6q")
 move_speed = 20
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-texture = ExtResource("2_633n4")
+texture = ExtResource("2_gai6w")
 hframes = 8
 
 [node name="MouthCollisionShape2D" type="CollisionShape2D" parent="."]
@@ -73,12 +73,14 @@ libraries = {
 "": SubResource("AnimationLibrary_oyokw")
 }
 
-[node name="StateMachine" type="Node" parent="."]
-script = ExtResource("3_fodtn")
-initial_state = "Wander"
+[node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
+script = ExtResource("3_ccaip")
+initial_state = NodePath("WanderState")
 
-[node name="Wander" type="Node" parent="StateMachine"]
-script = ExtResource("4_dn56m")
+[node name="WanderState" type="Node" parent="StateMachine" node_paths=PackedStringArray("follow_target_state")]
+script = ExtResource("4_7fs7l")
+follow_target_state = NodePath("../FollowTargetState")
 
-[node name="FollowTarget" type="Node" parent="StateMachine"]
-script = ExtResource("5_74h2v")
+[node name="FollowTargetState" type="Node" parent="StateMachine" node_paths=PackedStringArray("wander_state")]
+script = ExtResource("5_r570d")
+wander_state = NodePath("../WanderState")
